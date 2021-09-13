@@ -7,3 +7,9 @@ Using conda
 
     conda install -c conda-forge opencv numpy-indexed
 
+Using pip
+
+    pip install opencv-python numpy-indexed
+
+
+
