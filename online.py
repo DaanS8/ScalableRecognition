@@ -13,7 +13,7 @@ def main():
     if img is None:
         raise Exception("Error reading given image, img is None.")
 
-    # GO!
+    # Do some stuff
 
 
 if __name__ == "__main__":
