@@ -2,14 +2,40 @@
 Run this file to setup the tree system used for initial scoring.
 Look at parameters.py before running!
 
-Note: the ETA/reauired diskspace ar not that accurate. Use it as an order of magnitude for the actual values.
+What does this script do?
+
+Before the program starts, an estimate of duration and disk space will be calculated.
+This is fairly accurate except for the duration of the tree fase which is a guesstimate.
+
+Then the 'real' program starts.
+First, every db image will be normalised.
+To be more precise every db image is grayscaled and then rescaled so that both width and height don't exceed the parameter MAX_IMAGE_SIZE.
+
+Afterwards, precalculated data of every image is stored in the calc/ folder.
+This data will be used in the following step.
+If the parameter PRE_CALC_DES is True, then this data will remain on disk, otherwise it will be removed when the program exits.
+This takes up a lot of disk space but will speed up the online fase. Note that this speedup is only significant when the data is quickly retrievable.
+Therefore, using a SSD drive as storage device is strongly advised.
+A hard disk might even slow down the online fase; it's best you test this yourself.
+
+Finally, the data structure for retrieval will be generated.
+During this fase it's possible that there'll be temporary data stored in the tmp/ folder.
+This folder will be systematically emptied when the program doesn't need the information anymore.
+This fase requires a *lot* of RAM.
+The program estimates how much RAM it needs.
+Don't forget to specify how much RAM you have available for the program in the parameter MAX_MEMORY_USAGE_GB.
+If the program doesn't have enough RAM, an estimation will be used for the data structure.
+More on this in the section "How it works > Scaling up".
+If the parameter SAVE_DISK_SPACE_DURING_RUNNING is True, the calc/ folder will be emptied during this fase.\
+
+At the end of the program, if SAVE_DISK_SPACE_DURING_RUNNING and PRE_CALC_DES are both True, the data in the calc/ folder needs to be recalculated.
 
 frequently used abbreviations:
 kp - keypoint
 des - descriptor
 db - database
 
-Files structure:
+File structure:
 (input)     data/   : all db images. assumption: all images have extension '.jpg'.
 (temp)      tmp/    : temporary folder for storing checkpoints
 (output)    calc/   : contains all stored kp and des of db images
@@ -30,7 +56,7 @@ import numpy_indexed as npi
 
 def create_missing_output_folders():
     """
-    Make sure all folders used by program exist.
+    Helper function to make sure all folders used by program exist.
     """
     if not os.path.isdir("data/"):  # raise exception if no db images are provided
         raise Exception("Folder data/ is empty. No db images provided.")
@@ -42,6 +68,8 @@ def create_missing_output_folders():
 
 def eta(all_ids):
     """
+    Helper function: estimate runtime and disk space.
+
     Try 100 random items to estimate duration of the whole program.
     Returns estimations of:
     - Total runtime
@@ -104,7 +132,7 @@ def eta(all_ids):
 
 def format_ids_des(data):
     """
-    Helper to format chunked data.
+    Helper function to format chunked data.
     """
     ids, des = list(), list()
 
@@ -121,15 +149,16 @@ def format_ids_des(data):
 
 
 def main():
-    create_missing_output_folders()
+    create_missing_output_folders()  # data/, calc/ and temp/
 
-    all_ids = db_image.get_ids()
+    all_ids = db_image.get_ids()  # get ids of all db images
 
-    # ETA
+    # estimate runtime and used disk space
     eta_tot, eta_resize, eta_calc, eta_tree, calc_size_gb, tmp_size_gb, weight = eta(all_ids)
     print("(PERMANENT) Est. size of calc/ folder: {:.2f}GB".format(calc_size_gb))
     print("(TEMPORARY) Est. extra disk space used during offline fase: {:.2f}".format(tmp_size_gb))
     print("Total ETA: " + str(datetime.timedelta(seconds=eta_tot)))
+    print('Percentage of data used on first level {:.2f}'.format(weight * 100))
 
     # Resizing and grayscale images
     print("1) Start resizing and grayscaling images, ETA: " + str(datetime.timedelta(seconds=eta_resize)))
@@ -141,10 +170,10 @@ def main():
     # Calculate and store all kp & des of images
     print("2) Start calculating des, ETA: " + str(datetime.timedelta(seconds=eta_calc)))
     start = time.time()
-    ids, des = format_ids_des(parallelize.parallelize_calc(all_ids))
+    ids, des = format_ids_des(parallelize.parallelize_calc(all_ids, weight))
     print("Calculating des finished! Runtime: " + str(datetime.timedelta(seconds=time.time() - start)))
 
-    # Build tree
+    # Build data structure for retrieval
     print("3) Start building tree, ETA: " + str(datetime.timedelta(seconds=eta_tree)))
     start = time.time()
     tree = kmeans_tree.KMeansTree(K, L, CRITERIA, ATTEMPTS_KMEANS)
@@ -153,7 +182,7 @@ def main():
             try:
                 tree.build_branch(ids, des, attempts_level=ATTEMPTS_TREE_LEVEL)
             except Exception as e:
-                print("Failed attempt", e)
+                print("Failed attempt:", e)
             else:
                 break
         else:
@@ -184,7 +213,7 @@ def main():
                 try:
                     tree.build_branch(ids, des, level=1, index=node_index, attempts_level=ATTEMPTS_TREE_LEVEL)
                 except Exception as e:
-                    print("Failed attempt", e)
+                    print("Failed attempt:", e)
                 else:
                     break
             else:

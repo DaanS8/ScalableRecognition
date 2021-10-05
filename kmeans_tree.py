@@ -59,9 +59,10 @@ class KMeansTree:
         node = self.tree[0][index + np.sum(np.power(self.k, np.arange(level)))]
 
         # check if node not already build
-        if node[0, 0] == 0:
+        if node[0, 0] != 0:
             print("Node at level {} and index {} already build.".format(level, index))
             return None
+        print("Building node at level {} and index {}.".format(level, index))
 
         # calculate clusters
         clusters = cv.kmeans(des, self.k, None, self.criteria, self.attempts, cv.KMEANS_PP_CENTERS)[2]
@@ -75,7 +76,7 @@ class KMeansTree:
 
     def build_branch(self, ids, des, level=0, index=0, attempts_level=10):
         # check if given node not already build
-        if self.tree[0][index + np.sum(np.power(self.k, np.arange(level))), 0, 0] == 0:
+        if self.tree[0][index + np.sum(np.power(self.k, np.arange(level))), 0, 0] != 0:
             print("Node at level {} and index {} already build.".format(level, index))
             return None
 
@@ -113,12 +114,13 @@ class KMeansTree:
             del res
             level += 1
 
+        print(len(all_clusters))
         # update clusters
         if initial_level > 0:
-            for index, cluster in zip(_cluster_nbs(initial_level, index, self.k, self.l), clusters):
+            for index, cluster in zip(_cluster_nbs(initial_level, index, self.k, self.l), all_clusters):
                 self.tree[0][index] = cluster
         else:
-            self.tree = (clusters, self.tree[1])
+            self.tree = (all_clusters[0], self.tree[1])
 
         # update leaves
         for leaf_nb, leaf_ids in zip(_leaf_nbs(initial_level, index, self.k, self.l), ids):

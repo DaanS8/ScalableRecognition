@@ -12,7 +12,7 @@ def get_pickled(path):
         with open(path, 'rb') as handle:
             data = pickle.load(handle)
         return data
-    except FileNotFoundError:
+    except Exception:
         return None
 
 
