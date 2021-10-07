@@ -114,20 +114,21 @@ class KMeansTree:
             del res
             level += 1
 
-        print(len(all_clusters))
         # update clusters
+        print("Updating clusters.")
         if initial_level > 0:
-            for index, cluster in zip(_cluster_nbs(initial_level, index, self.k, self.l), all_clusters):
-                self.tree[0][index] = cluster
+            for j, cluster in zip(_cluster_nbs(initial_level, index, self.k, self.l), all_clusters):
+                self.tree[0][j] = cluster
         else:
             self.tree = (all_clusters[0], self.tree[1])
 
         # update leaves
+        print("Updating leaves.")
         for leaf_nb, leaf_ids in zip(_leaf_nbs(initial_level, index, self.k, self.l), ids):
             unique, counts = np.unique(leaf_ids, return_counts=True)
             self.tree[1][leaf_nb] = np.array(0, dtype=np.float32), unique, counts.astype(np.uint32)
-
         # store result!
+        print("Storing results.")
         self.store()
 
     def finalise(self, N=None):
