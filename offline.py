@@ -176,7 +176,7 @@ def main():
     # Build data structure for retrieval
     print("3) Start building tree, ETA: " + str(datetime.timedelta(seconds=eta_tree)))
     start = time.time()
-    tree = kmeans_tree.KMeansTree(K, L, CRITERIA, ATTEMPTS_KMEANS)
+    tree = kmeans_tree.KMeansTree("tree.p", len(db_image.get_ids()), K, L, CRITERIA, ATTEMPTS_KMEANS)
     if weight == 1:
         for attempt in range(ATTEMPTS_TREE_BRANCH):
             try:
@@ -191,18 +191,19 @@ def main():
         # build first node
         clusters = tree.build_node_from_given_data(des)
 
-        # cluster descriptors in their respective nodes
-        for image_id in all_ids:
-            des = db_image.DbImage(image_id).get_kp_des(delete=SAVE_DISK_SPACE_DURING_RUNNING)[1]
+        if clusters is not None:
+            # cluster descriptors in their respective nodes
+            for image_id in all_ids:
+                des = db_image.DbImage(image_id).get_kp_des(delete=SAVE_DISK_SPACE_DURING_RUNNING)[1]
 
-            if des is not None and len(des) != 0:  # only use valid images
-                # get closest cluster center for every des
-                indices = utils.get_closest_indexes(clusters, des)
-                # sort des in groups with the same cluster center
-                indices, des = npi.group_by(indices, des)
-                # append grouped des into their respective files
-                for i, d in zip(indices, des):
-                    utils.pickle_data((image_id, d), "tmp/" + str(i), mode="ab")
+                if des is not None and len(des) != 0:  # only use valid images
+                    # get closest cluster center for every des
+                    indices = utils.get_closest_indexes(clusters, des)
+                    # sort des in groups with the same cluster center
+                    indices, des = npi.group_by(indices, des)
+                    # append grouped des into their respective files
+                    for i, d in zip(indices, des):
+                        utils.pickle_data((image_id, d), "tmp/" + str(i), mode="ab")
 
         # build all branches on level 1
         for node_index in range(K):
