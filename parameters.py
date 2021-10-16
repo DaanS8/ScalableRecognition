@@ -46,11 +46,11 @@ PRE_CALC_DES = True
 
 # Criteria of kmeans algorithm
 # opencv docs: https://docs.opencv.org/4.5.2/d1/d5c/tutorial_py_kmeans_opencv.html
-# Recomended:
+# Recommended:
 # (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 5, 0.5)
 # 5
-CRITERIA = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 2, 1)
-ATTEMPTS_KMEANS = 2
+CRITERIA = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 5, 1)
+ATTEMPTS_KMEANS = 5
 
 ATTEMPTS_TREE_LEVEL = 10
 ATTEMPTS_TREE_BRANCH = 25

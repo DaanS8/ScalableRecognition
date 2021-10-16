@@ -16,7 +16,7 @@ trees = ["sift_all_tree.p"]
 test_folder = "testset/"
 
 
-def _look_for_sub_test_folders():
+def _look_for_sub_test_folders(test_folder):
     # Check if there are sub test folders in the given test_folder
     # If there are sub folders, use these as test_folders
     # If there are no sub folders, use the given test_folder in test_folders
@@ -54,7 +54,7 @@ def final_scoring(kp, des, initial_scores):
 
 
 def main():
-    test_folders = _look_for_sub_test_folders()
+    test_folders = _look_for_sub_test_folders(test_folder)
 
     for tree_path in trees:
         tree = kmeans_tree.KMeansTree(tree_path)
@@ -113,8 +113,8 @@ def main():
                     start = time.time()
                     if len(final_result) > 0:
                         minimal_value = max(final_result.values()) * 0.1
-                        sum_values = sum(final_result.values())
-                        good = {k: v for k, v in final_result.items() if k >= minimal_value}
+                        good = {k: v for k, v in final_result.items() if v >= minimal_value}
+                        sum_values = sum(good.values())
 
                         first = True
                         for key, value in sorted(good.items(), key=lambda item: item[1], reverse=True):
