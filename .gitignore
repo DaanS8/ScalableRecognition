@@ -2,6 +2,7 @@ data/
 calc/
 tmp/
 testset/
+img_latex/
 *.jpg
 *.p
 # Byte-compiled / optimized / DLL files

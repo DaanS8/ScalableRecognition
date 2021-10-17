@@ -112,7 +112,7 @@ def main():
 
                     start = time.time()
                     if len(final_result) > 0:
-                        minimal_value = max(final_result.values()) * 0.1
+                        minimal_value = max(final_result.values()) * 0.2
                         good = {k: v for k, v in final_result.items() if v >= minimal_value}
                         sum_values = sum(good.values())
 
@@ -121,28 +121,27 @@ def main():
                             certainty_percentage = min(100, value - 5) * value / sum_values
                             if first:
                                 first = False
-                                if correct_id != -1:
-                                    if key == correct_id:
-                                        percentage_correct[certainty_percentage] = percentage_correct.get(certainty_percentage, 0) + 1
-                                    else:
-                                        percentage_incorrect[certainty_percentage] = percentage_incorrect.get(certainty_percentage, 0) + 1
+                                if key == correct_id:
+                                    percentage_correct[certainty_percentage] = percentage_correct.get(certainty_percentage, 0) + 1
+                                else:
+                                    percentage_incorrect[certainty_percentage] = percentage_incorrect.get(certainty_percentage, 0) + 1
 
-                                    # Certain/Uncertain as boolean value
-                                    if sum_values < 105 or certainty_percentage < 50:
-                                        if key == correct_id:
-                                            uncertain[0] += 1
-                                        else:
-                                            uncertain[1] += 1
+                                # Certain/Uncertain as boolean value
+                                if sum_values < 105 or certainty_percentage < 50:
+                                    if key == correct_id:
+                                        uncertain[0] += 1
                                     else:
-                                        if key == correct_id:
-                                            certain[0] += 1
-                                        else:
-                                            certain[1] += 1
+                                        uncertain[1] += 1
+                                else:
+                                    if key == correct_id:
+                                        certain[0] += 1
+                                    else:
+                                        certain[1] += 1
                     else:
-                        if correct_id == -1:
-                            no_result[1] += 1
-                        else:
+                        if correct_index == -1:
                             no_result[0] += 1
+                        else:
+                            no_result[1] += 1
                     t5 += time.time() - start
                 except Exception as e:
                     print("Error at {} with error: {}".format(path, e))
