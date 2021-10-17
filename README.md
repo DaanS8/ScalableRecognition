@@ -120,9 +120,6 @@ SIFT is the most widely used descriptor and [has been proven](https://ieeexplore
 it's possible that [MSER (Maximally Stable Extremal Regions)](https://cmp.felk.cvut.cz/~matas/papers/matas-bmvc02.pdf) could do a better job at feature extraction than [SIFT](https://ieeexplore.ieee.org/document/790410/).
 Still [SIFT](https://ieeexplore.ieee.org/document/790410/) is used as the extractor here, mainly because MSER is significantly slower (at least in the opencv-python library) and initial testing showed no significant improvement that could've justified the added duration of extraction.  
 
-
-//TODO toch uitleggen?
-
 I won't explain either of the algorithms, the opencv library takes care of their implementation.
 The most important thing to know for [SIFT](https://ieeexplore.ieee.org/document/790410/) is that it generates descriptors that are 128-dimensional.
 If you'd like to understand the specific algorithms behind [SIFT](https://ieeexplore.ieee.org/document/790410/) and [MSER](https://en.wikipedia.org/wiki/Maximally_stable_extremal_regions) I recommend the following links:
@@ -136,6 +133,8 @@ If you'd like to understand the specific algorithms behind [SIFT](https://ieeexp
 ### Scaling up
 
 Now we know how we can recognise objects between two images, but how do we scale this up? 
+It's not possible to match every query descriptor to every db descriptor.
+So the goal that we're trying to achieve is to match query descriptors to db descriptors without comparing them to every single descriptor.
 [Scalable Recognition with a Vocabulary Tree (2006)](https://people.eecs.berkeley.edu/~yang/courses/cs294-6/papers/nister_stewenius_cvpr2006.pdf) shows how this can be achieved by using a clever data structure.
 
 #### K-means
@@ -163,20 +162,21 @@ In 2007 Arthur D. and Vassilvitskii S. proposed the k-means++ algorithm which ha
 3) Select a new cluster center where the probability of selecting a point is proportional to d²
 4) repeat until k initial cluster centers are selected, then proceed with the normal k-means algorithm
 
-#### Hierarchical k-means tree
+#### Building a hierarchical k-means tree
 The k-means++ algorithm is used to build a tree.
-On all the descriptors of the db images, run the k-means algorithm, this results in k clusters.
-Run k-means again in every cluster, use all descriptors of that cluster and again k clusters our found.
+Run the k-means algorithm on all the descriptors of the db images, this results in k clusters.
+Run k-means again in every cluster, use all descriptors assigned to that cluster and again k clusters our found.
 Keep repeating this L times, where L is short for levels.
 This results in a tree with `k^L` cluster groups at the lowest level, aka leaf nodes. 
-Every leaf node is the cluster center of a varying amount descriptors that are all descriptors of a specific db image.
+Every leaf node is the cluster center with a varying amount descriptors assigned to it.
 
 The image below gives an example for `k = 3; L = 4`, where the k-clustering algorithm is only ran in one of the found cluster groups.
 The Voronoi region is the region around a cluster center where points are closest to that cluster center and not to another cluster center of that level.
 
 ![Example hierarchical k-means tree](img_rm/kmeans_tree.png)
 
-If we now want to know to which leaf node a descriptor is closest to, we don't need to calculate `k^L` distances, we just traverse the tree. 
+#### Finding the closest leaf node
+If we now want to know to which db descriptors a querry descriptor is close to, we don't need to calculate every distances, we just traverse the tree. 
 On the first level, calculate which centroid is closest; this requires k distance calculations. 
 In that cluster, do the same until you know which leaf node is closest to the descriptor.
 In total this requires `L*k` distance calculations instead of `k^L`, pretty efficient!  
@@ -197,6 +197,101 @@ In a single image of dimensions 1080x1080 there are in the order of 2000 keypoin
 Only a small percentage of that will result in the wrong leaf node, although it adds noise, the total scoring system is pretty resilient to a few wrong leaf nodes.
 
 #### Scoring
+
+For every query descriptor we want to know which db descriptors are close to them. 
+If we find the leaf node that's closest to a query descriptor, the match we're looking for is probably in that leaf node.
+Every descriptor is derived from an image, so we'll give a score to every image which has a descriptor assigned to that leaf node.
+Only images which consistently have descriptors close to the querry descriptors will receive a lot of score.
+The images with the highest score are considered as possible matches, the N best matches can be checked by using the methodes described in **'The basics'**.
+
+#### Scoring concepts
+
+In this repository only the best result achieved in [Scalable Recognition with a Vocabulary Tree (2006)](https://people.eecs.berkeley.edu/~yang/courses/cs294-6/papers/nister_stewenius_cvpr2006.pdf) is implemented.
+Please read the paper if you'd like to check which methodes they tried.
+
+So we give add a score to every image in the closest leaf node for every query descriptor, but how much score do we add to every image? 
+We'll need to account for a few things.
+
+- Normalisation: If a db image has a lot of descriptors, it should receive less score than an image that has fewer descriptors; it's more probable that the image whith a lot of descriptors is present in a random leaf node than an image with few descriptors.
+
+- Entropy weighting: If a leaf node has fewer descriptors assigned to it, all images of those descriptors should receive more score; less possible correct matches contains more information.
+
+- Efficiency: Obviously the scoring should be as fast as possible.
+
+#### Formula
+
+The following formulas define the score of the an image.
+
+![Formula for the score of an image](img_rm/score_formula.jpg)
+
+q is short for query, d is short for database.
+wi is the weight used at leaf node i.
+N is the total amount of images in the database, Ni is the amount of images present in leaf node i.
+qi and di are elements of the vectors q and d respectively, at the index i.
+ni and mi are the number of vectors in the leaf node i of the query and database image respectively.
+The normalisation and distance between d and q are L1-norms, these have been found to be more accurate than L2-norms.
+
+In this formula, the lower the score the better. 
+How closer the occurance of vectors in every leaf node of the query image matches that of the db image, the lower the score.
+So images with similar descriptors are concidered as good candidates.
+
+#### Implementation
+
+The formula takes care of the normalisation and entropy weighting.
+The implementation of the scoring will ensure enficiency.
+The formula below shows a simplification of the score formula.
+
+![Simplication of the score formula](img_rm/implementation_formula.jpg)
+
+The simplification comes down to:
+
+1) Give every image a score of 2
+2) For every leaf node were at least one query descriptor ends
+    3) Subtract a score of every image present present in that leaf node, where the exact score is calculated using the above formula
+
+Due to this implementation only the leaf nodes where a query descriptor ends needs to be processed and only the images present on that leaf node.
+This avoids processing every image seperatly. 
+Note that only the cluster centers are used for distance calculations. 
+The only information of the descriptors we use is from which image it is, and how many at which leaf node there are descriptors of an image.
+We pre-proces the wi and di values on every leaf node for every image, then only centroids of the tree and that scoring data needs to be stored.
+F.e. my image db is 16GB, all kp and des take up ~150GB but the tree only takes up 3GB.
+
+**NOTE:** In this repository we made a little adjustment to that formula: we start with zero and add score instead of substracting it. 
+So the higher the score, the better the candidate is in our implementation.
+
+### Final scoring
+
+The best N candidates, aka the images with the highest score are all checked if they are a correct match.
+We already calculated the kp and des of the query image.
+If the kp and des are stored per image, we can get those from our SSD drive (disk might be to slow).
+Then the only thing left to do ist matching the prestored data and aplying geometric verification.
+The amount of inliers of the N best candidates are used for the final proposed match.
+
+An image needs to have at least 6 inliers to be concidered a possible match.
+Then we throw away the candidates with fewer then 20% inliers of the highest amount of inliers.
+A certainty percentage is given to the remaining candidates with the following formula:
+
+    min(100, inliers - 5) * inliers / sum_inliers
+    
+sum_inliers is the sum of the inliers of the remaining candidates.
+This results in a percentage between 0 and 100 representing the certainty of every match.
+A binary value of certainty for the best match could be set as followed: 
+
+    if sum_inliers < 105 or certainty_percentage < 50:
+        UNCERTAIN
+    else:
+        CERTAIN
+        
+## My results
+
+
+
+
+
+
+
+
+
 
 ## Further improvement
 
