@@ -281,19 +281,10 @@ A binary value of certainty for the best match could be set as followed:
         UNCERTAIN
     else:
         CERTAIN
-        
-## My results
-
-
-
-
-
-
-
-
-
 
 ## Further improvement
+
+Using state of the art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree. Using the fais library, I've significantly improved the accuracy of the object detection in https://www.github.com/ScalableRecognitionImproved
 
 ## References
 
