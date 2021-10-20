@@ -250,8 +250,8 @@ The formula below shows a simplification of the score formula.
 The simplification comes down to:
 
 1) Give every image a score of 2
-2) For every leaf node were at least one query descriptor ends
-    3) Subtract a score of every image present present in that leaf node, where the exact score is calculated using the above formula
+2) For every leaf node were at least one query descriptor ends do step 3.
+3) Subtract a score of every image present present in that leaf node, where the exact score is calculated using the above formula
 
 Due to this implementation only the leaf nodes where a query descriptor ends needs to be processed and only the images present on that leaf node.
 This avoids processing every image seperatly. 
