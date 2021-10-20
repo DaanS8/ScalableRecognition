@@ -32,7 +32,7 @@ Using pip
 ## How to use
 ### 1) Setup
 
-Put all your database images in the `data/` folder. Every image should have the format `id.jpg` where `id` is an integer. To be complete, the ids aren't required to be sequential. The images in the `data/` folder are often refered to as the db (database) images.
+Put all your database images in the `data/` folder. Every image should have the format `id.jpg` where `id` is an integer. To be complete, the ids aren't required to be sequential. The images in the `data/` folder are often referred to as the db (database) images.
 
 Put all your query images in the `test/` folder. Every image must have a `.jpg` extension.   
 **_Optional:_** _if you'd like to test the accuracy, then name every query image `id.jpg` where `id` is the id of the correct db image match._
@@ -284,7 +284,15 @@ A binary value of certainty for the best match could be set as followed:
 
 ## Further improvement
 
-Using state of the art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree. Using the fais library, I've significantly improved the accuracy of the object detection in https://www.github.com/ScalableRecognitionImproved
+Adding images to the tree should be perfectly possible without loosing accuracy. This is not implemented yet.
+
+As previously metioned, using another keypoint extractor (f.e.) MSER could improve performance. 
+Training a kp and des extractor and descriptor (f.e. [DELF](https://github.com/facebookresearch/faiss)) should increase performance. 
+This was not possible to implement mainly due to insufficient test data and time constraints.
+Implementing either another keypoint extractor or training an AI for feature extraction is definetly worth a trie.
+
+Using state-of-the-art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree.
+Using the faiss library, I've significantly improved the accuracy of the object detection in https://www.github.com/ScalableRecognitionImproved
 
 ## References
 
