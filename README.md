@@ -265,13 +265,13 @@ So the higher the score, the better the candidate is in our implementation.
 
 ### Final scoring
 
-The best N candidates, aka the images with the highest score are all checked if they are a correct match.
+The best `N` candidates, aka the images with the highest score are all checked if they are a correct match.
 We already calculated the kp and des of the query image.
 If the kp and des are stored per image, we can get those from our SSD drive (disk might be to slow).
 Then the only thing left to do ist matching the prestored data and aplying geometric verification.
-The amount of inliers of the N best candidates are used for the final proposed match.
+The amount of inliers of the `N` best candidates are used for the final proposed match.
 
-An image needs to have at least 6 inliers to be concidered a possible match.
+An image needs to have at least six inliers to be concidered a possible match.
 Then we throw away the candidates with fewer then 20% inliers of the highest amount of inliers.
 A certainty percentage is given to the remaining candidates with the following formula:
 
@@ -296,7 +296,7 @@ This was not possible to implement mainly due to insufficient test data and time
 Implementing either another keypoint extractor or training an AI for feature extraction is definetly worth a trie.
 
 Using state-of-the-art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree.
-Using the faiss library, I've significantly improved the accuracy of the object detection in https://www.github.com/ScalableRecognitionImproved
+Using the faiss library, I've significantly improved the accuracy of the object detection in https://www.github.com/DaanS8/ScalableRecognitionImproved.
 
 ## References
 
