@@ -34,7 +34,9 @@ Using pip
 
 Put all your database images in the `data/` folder. Every image should have the format `id.jpg` where `id` is an integer. To be complete, the ids aren't required to be sequential. The images in the `data/` folder are often referred to as the db (database) images.
 
-Put all your query images in the `test/` folder. Every image must have a `.jpg` extension.   
+Put all your query images in the `testset/` folder. 
+Using subfolders like `testset/Easy/` etc. is possible.
+Every image must have a `.jpg` extension.   
 **_Optional:_** _if you'd like to test the accuracy, then name every query image `id.jpg` where `id` is the id of the correct db image match._
 
 _**Optional:** For a cleaner output, you can add a `names.p` file. This file is a pickle file containing a dictionary<integer, string>.
@@ -50,7 +52,9 @@ If you'd like to understand what this script exactly does, first read through th
 
 ### 3) Online
 
-//TODO
+Run `online_debug.py` to get accuracy and performance results on all your images in the `testset/` folder or subfolders.
+
+Run `online.py` to test single images using the command line.
 
 ## How it works
 
