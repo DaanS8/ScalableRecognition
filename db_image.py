@@ -1,4 +1,3 @@
-import cv2 as cv
 import utils
 import resize
 import os

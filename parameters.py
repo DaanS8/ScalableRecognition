@@ -17,8 +17,7 @@ SAVE_DISK_SPACE_DURING_RUNNING = False
 
 
 # How much RAM/memory is available for the program.
-# In pycharm you can increase this under Help>Change memory settings.
-# In a window machine, you can increase the cache size by following the steps on:
+# In a window machine, you can increase the memory size by following the steps on:
 # https://www.windowscentral.com/how-change-virtual-memory-size-windows-10
 #
 # If possible provide (at least) '2.1 x size of all des' as available memory.
@@ -49,7 +48,7 @@ PRE_CALC_DES = True
 # Recommended:
 # (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 5, 0.5)
 # 5
-CRITERIA = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 5, 1)
+CRITERIA = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 5, 0.5)
 ATTEMPTS_KMEANS = 5
 
 ATTEMPTS_TREE_LEVEL = 10
