@@ -17,7 +17,7 @@ SAVE_DISK_SPACE_DURING_RUNNING = False
 
 
 # How much RAM/memory is available for the program.
-# In a window machine, you can increase the memory size by following the steps on:
+# In a Windows machine, you can increase the memory size by following the steps on:
 # https://www.windowscentral.com/how-change-virtual-memory-size-windows-10
 #
 # If possible provide (at least) '2.1 x size of all des' as available memory.

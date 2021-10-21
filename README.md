@@ -8,7 +8,7 @@ a method is proposed how this goal could be achieved. Despite the age of this pa
 There are a lot of variations in recognition/object detection/classification.
 This repository is specifically for object detection with a large scale dataset.
 The dataset consists of detailed images of the objects that need to be recognised.
-In a query image either no or only one object can be detected.
+In a query image either none or only one object can be detected.
 It has been tested with a database size of 100_000 images which has a process time of 2s for every recognition.
 Accuracy is highly dependent on how clear the object is present in the image and how large your dataset is.
 To give an idea about the accuracy I found following approximate accuracies with a dataset of 100_000 images.
@@ -56,13 +56,13 @@ Run `online_debug.py` to get accuracy and performance results on all your images
 
 Run `online.py` to test single images using the command line.
 
-## How it works
+## How It Works
 
 In this section we'll explain the principles behind the code.
 It's written in a way so no prior knowledge except some programming experience is required. 
 First we define the problem, then we'll explain which basic principles we use and afterwards we show how these basic principles can be used to tackle the problem.
 
-### The problem
+### The Problem
 
 We have a lot of objects as db images. 
 A query image (possibly) contains the same object as a db but in a different context. 
@@ -76,7 +76,7 @@ How will we achieve this?
 First, we'll need to be able to tell if we have the same object in two images.  
 If we know that, we'll use those principles with an efficient database structure to scale it.
 
-### The basics
+### The Basics
 
 In this section we'll tackle the problem of how to tell if there's an identical object in two images. 
 Traditionally this is done by using local invariant features. 
@@ -134,7 +134,7 @@ If you'd like to understand the specific algorithms behind [SIFT](https://ieeexp
  - [MSER slides](http://www.micc.unifi.it/delbimbo/wp-content/uploads/2011/03/slide_corso/A34%20MSER.pdf)
  - [MSER youtube](https://www.youtube.com/watch?v=O0HkgXB_KY4)
  
-### Scaling up
+### Scaling Up
 
 Now we know how we can recognise objects between two images, but how do we scale this up? 
 It's not possible to match every query descriptor to every db descriptor.
@@ -166,7 +166,7 @@ In 2007 Arthur D. and Vassilvitskii S. proposed the k-means++ algorithm which ha
 3) Select a new cluster center where the probability of selecting a point is proportional to d²
 4) repeat until k initial cluster centers are selected, then proceed with the normal k-means algorithm
 
-#### Building a hierarchical k-means tree
+#### Building a Hierarchical k-means Tree
 The k-means++ algorithm is used to build a tree.
 Run the k-means algorithm on all the descriptors of the db images, this results in k clusters.
 Run k-means again in every cluster, use all descriptors assigned to that cluster and again k clusters our found.
@@ -179,7 +179,7 @@ The Voronoi region is the region around a cluster center where points are closes
 
 ![Example hierarchical k-means tree](img_rm/kmeans_tree.png)
 
-#### Finding the closest leaf node
+#### Finding the Closest Leaf Node
 If we now want to know to which db descriptors a querry descriptor is close to, we don't need to calculate every distances, we just traverse the tree. 
 On the first level, calculate which centroid is closest; this requires k distance calculations. 
 In that cluster, do the same until you know which leaf node is closest to the descriptor.
@@ -208,7 +208,7 @@ Every descriptor is derived from an image, so we'll give a score to every image 
 Only images which consistently have descriptors close to the querry descriptors will receive a lot of score.
 The images with the highest score are considered as possible matches, the N best matches can be checked by using the methodes described in **'The basics'**.
 
-#### Scoring concepts
+#### Scoring Concepts
 
 In this repository only the best result achieved in [Scalable Recognition with a Vocabulary Tree (2006)](https://people.eecs.berkeley.edu/~yang/courses/cs294-6/papers/nister_stewenius_cvpr2006.pdf) is implemented.
 Please read the paper if you'd like to check which methodes they tried.
@@ -275,7 +275,7 @@ An image needs to have at least six inliers to be concidered a possible match.
 Then we throw away the candidates with fewer then 20% inliers of the highest amount of inliers.
 A certainty percentage is given to the remaining candidates with the following formula:
 
-    min(100, inliers - 5) * inliers / sum_inliers
+    certainty_percentage = min(100, inliers - 5) * inliers / sum_inliers
     
 sum_inliers is the sum of the inliers of the remaining candidates.
 This results in a percentage between 0 and 100 representing the certainty of every match.
