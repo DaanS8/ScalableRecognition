@@ -2,11 +2,12 @@
 import cv2 as cv
 import numpy as np
 from past.builtins import xrange
+import heapq
 
 MIN_MATCH_COUNT = 10
 
-img_1 = cv.imread('200890_db.jpg', cv.IMREAD_GRAYSCALE)
-img_2 = cv.imread('200890.jpg', cv.IMREAD_GRAYSCALE)
+img_1 = cv.imread('../data/200890.jpg', cv.IMREAD_GRAYSCALE)
+img_2 = cv.imread('../testset/Easy/200890.jpg', cv.IMREAD_GRAYSCALE)
 
 sift = cv.SIFT_create()
 kp_1, des_1 = sift.detectAndCompute(img_1, None)
@@ -57,3 +58,38 @@ draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
 good = [i[0] for i in good]
 img4 = cv.drawMatches(img_1, kp_1, img_2, kp_2, good, None, **draw_params)
 cv.imwrite('./RANSAC.jpg', img4)
+
+img = cv.imread("../testset/Hard/10630.jpg")
+kp, des = sift.detectAndCompute(img, None)
+img_1_kp = cv.drawKeypoints(img, kp, None, (255, 0, 0))
+cv.imwrite("./coach.jpg", img_1_kp)
+print(len(kp))
+
+if kp is not None and len(kp) > 1500:
+    tmp = heapq.nlargest(1500, zip(kp, des), key=lambda x: x[0].response)
+    kp_scoring, des_scoring = list(), list()
+    for k, _ in tmp:
+        kp_scoring.append(k)
+    des_scoring = np.array(des_scoring, dtype=np.float32)
+
+
+img_1_kp = cv.drawKeypoints(img, kp_scoring, None, (255, 0, 0))
+cv.imwrite("./coach_reduced.jpg", img_1_kp)
+print(len(kp_scoring))
+
+img = cv.imread("../testset/Hard/169786.jpg")
+kp, des = sift.detectAndCompute(img, None)
+img_1_kp = cv.drawKeypoints(img, kp, None, (255, 0, 0))
+cv.imwrite("./carpet.jpg", img_1_kp)
+print(len(kp))
+
+if kp is not None and len(kp) > 1500:
+    tmp = heapq.nlargest(1500, zip(kp, des), key=lambda x: x[0].response)
+    kp_scoring, des_scoring = list(), list()
+    for k, _ in tmp:
+        kp_scoring.append(k)
+    des_scoring = np.array(des_scoring, dtype=np.float32)
+
+img_1_kp = cv.drawKeypoints(img, kp_scoring, None, (255, 0, 0))
+cv.imwrite("./carpet_reduced.jpg", img_1_kp)
+print(len(kp_scoring))
