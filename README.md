@@ -9,17 +9,17 @@ There are a lot of variations in recognition/object detection/classification.
 This repository is specifically for object detection with a large scale dataset.
 The dataset consists of detailed images of the objects that need to be recognised.
 In a query image either none or only one object can be detected.
-It has been tested with a database size of 100_000 images which has a process time of 2s for every recognition.
+It has been tested with a database size of 100_000 images which has a process time of 1.33s for every query image.
 Accuracy is highly dependent on how clear the object is present in the image and how large your dataset is.
-To give an idea about the accuracy I found following approximate accuracies with a dataset of 100_000 images.
+To give an idea about the accuracy,  I found following approximate accuracies with a dataset of 100_000 images.
 - The object takes up >80% of the image: accuracy = ~95+%
-- The object takes up <20% of the image: accuracy = ~60%
+- The object takes up <20% of the image: accuracy = ~68%
 
 
 The goal is that you can easily try out your own database object detection system without needing to program anything else. 
 Parameters are used to customise your object recognition to maximise your precision.
 
-Almost all information is based on the before mentioned [paper](https://people.eecs.berkeley.edu/~yang/courses/cs294-6/papers/nister_stewenius_cvpr2006.pdf) and a course on 'Image Analysis and Understanding' of prof. Tuytelaars at the KU Leuven who was also my mentor for this student project.
+Almost all information is based on the before mentioned [paper](https://people.eecs.berkeley.edu/~yang/courses/cs294-6/papers/nister_stewenius_cvpr2006.pdf) and a course on 'Image Analysis and Understanding' at the KU Leuven.
 ## Installation
 Using conda
 
@@ -32,7 +32,9 @@ Using pip
 ## How to use
 ### 1) Setup
 
-Put all your database images in the `data/` folder. Every image should have the format `id.jpg` where `id` is an integer. To be complete, the ids aren't required to be sequential. The images in the `data/` folder are often referred to as the db (database) images.
+Put all your database images in the `data/` folder. Every image should have the format `id.jpg` where `id` is an integer. 
+To be complete, the ids aren't required to be sequential. 
+The images in the `data/` folder are often referred to as the db (database) images.
 
 Put all your query images in the `testset/` folder. 
 Using subfolders like `testset/Easy/` etc. is possible.
@@ -40,14 +42,14 @@ Every image must have a `.jpg` extension.
 **_Optional:_** _if you'd like to test the accuracy, then name every query image `id.jpg` where `id` is the id of the correct db image match._
 
 _**Optional:** For a cleaner output, you can add a `names.p` file. This file is a pickle file containing a dictionary<integer, string>.
-The number of keys must match the number of images in the `data/` folder. Each image must have one corresponding key with its id.
+The number of keys must match the number of images in the `data/` folder. Each image must have one corresponding key, its id.
 The corresponding value represents the name of the db image._
 
 **Important:** Check `parameters.py` to make sure everything is set up correctly for your purposes. If you don't fully understand a parameter, most of the time the defaults are fine, but please read the 'How it works' section to understand the parameters. 
 ### 2) Offline
 
 In this fase the data structure for retrieval is built.
-If you did everything in the previous steps, you only need to run the `offline.py` script and everything should be setup. 
+If you did everything in the previous step, you only need to run the `offline.py` script and everything should be setup. 
 If you'd like to understand what this script exactly does, first read through this readme file and afterwards read the detailed documentation in `offline.py`.
 
 ### 3) Online
@@ -59,14 +61,14 @@ Run `online.py` to test single images using the command line.
 ## How It Works
 
 In this section we'll explain the principles behind the code.
-It's written in a way so no prior knowledge except some programming experience is required. 
+It's written in a way so that no prior knowledge except some programming experience is required. 
 First we define the problem, then we'll explain which basic principles we use and afterwards we show how these basic principles can be used to tackle the problem.
 
 ### The Problem
 
 We have a lot of objects as db images. 
 A query image (possibly) contains the same object as a db but in a different context. 
-The goal is to match the query image to the correct db image where speed and accuracy define the performance of the retrieval system
+The goal is to match the query image to the correct db image where speed and accuracy define the performance of the retrieval system.
 
 _An example:_  
 Our dataset exists of common landmarks. The query image is a family picture in front of a landmark that they forgot the name of. 
@@ -79,24 +81,22 @@ If we know that, we'll use those principles with an efficient database structure
 ### The Basics
 
 In this section we'll tackle the problem of how to tell if there's an identical object in two images. 
-Traditionally this is done by using local invariant features. 
-First we'll define the abstract concepts afterwards two of the most popular algorithms will be explained.
+Traditionally this is done by using local invariant features:
 
 1) **_Feature extraction:_** Find points of interest in an image, often referred to as keypoints (kp). 
 Keypoints aren't only locations but also contain information about its size, orientation and sometimes shape.
 In short keypoints define "regions" of interest in an image. 
-These regions fo interest should be distinctive features of an object where a lot of information can be extracted.
+These regions of interest should be the distinctive features of an object where a lot of information can be extracted.
 Ideally these regions should always be the same points on an object no matter its scale or orientation.
 Sometimes even [affine](https://stackoverflow.com/questions/42581296/homography-and-affine-transformation) transformations are accounted for by keypoint extractors.
 Finally, keypoints are often pretty small. This makes it possible to recognise occluded objects by there smaller, fully visible features.
 A second reason is because it's often assumed the keypoints are planar, which is approximately true only if the regions are small.
 In the picture below keypoints are shown on two images in a different context. 
-Note that every keypoint has a different size and has some orientation information.
-The keypoint extractor used for this is SIFT, more on this later.
+Note that every keypoint has a different size and orientation.
 ![Keypoint detection example](img_rm/keypoint_detection.jpg)
 
 2) **_Feature description:_** Extract information at every keypoint in a robust and invariant way.
-This information is extracted as a high dimensional feature vectors.
+This information is extracted as high dimensional feature vectors.
 These feature vectors are often referred to as descriptors (des).
 A feature vector of similar regions will be close in the [Euclidean n-space](http://mathonline.wikidot.com/the-distance-between-two-vectors).
 To make feature descriptors robust they are often designed to be invariant for rotation transformations and lighting conditions.
@@ -107,7 +107,7 @@ The feature vectors with the smallest Euclidean distance are matched; in other w
 This is often refined by using [Lowe's ratio test](https://stackoverflow.com/questions/51197091/how-does-the-lowes-ratio-test-work):
 if there is a feature vector that is significantly closer than other feature vectors it's probably the same region in a different context.
 If there is no clear match, it's probably a region that is not in both images.
-So take the two closest feature vectors and only accept the closest vector as a match if the closest vector is x times closer than the second closest vector.
+So, take the two closest feature vectors and only accept the closest vector as a match if the closest vector is x times closer than the second closest vector.
 In the picture below, all keypoints without a clear match are represented as red dots. All accepted matches are shown in yellow.
 ![Example of keypoint matches](img_rm/matching.jpg)
 
