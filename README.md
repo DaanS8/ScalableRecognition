@@ -191,10 +191,10 @@ The image below is a visual representation of how accuracy is lost.
 There are 2 clusters, the blue cluster and an orange cluster.
 Both cluster centers are colored gray and yellow respectively.
 The green dot is the query vector.
-First the closest cluster center is selected, here the gray cluster center is closest aka the blue cluster group.
-In the blue cluster group the point with coordinates `(2, 2)` is the leaf node that is selected as the closest leaf node.
-The actual closest leaf node is the leaf node in the orange cluster with coordinate `(2, 3)`.
-So sometimes traversing the tree results in a false closest leaf node.
+First the closest cluster center is selected, here the gray cluster center is closest aka the blue cluster group (first image).
+In the blue cluster group the point with coordinates `(2, 2)` is the leaf node that is selected as the closest leaf node (second image).
+The actual closest leaf node, is the leaf node in the orange cluster with coordinate `(2, 3)` (third image).
+So, sometimes traversing the tree results in a false closest leaf node.
 
 ![An example of how accuracy is lost using a k-means tree](img_rm/example_errors_kmeans_tree.jpg)
 
