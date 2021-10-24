@@ -230,12 +230,12 @@ The following formulas define the score of the an image.
 
 ![Formula for the score of an image](img_rm/score_formula.jpg)
 
-q is short for query, d is short for database.
-wi is the weight used at leaf node i.
-N is the total amount of images in the database, Ni is the amount of images present in leaf node i.
-qi and di are elements of the vectors q and d respectively, at the index i.
-ni and mi are the number of vectors in the leaf node i of the query and database image respectively.
-The normalisation and distance between d and q are L1-norms, these have been found to be more accurate than L2-norms.
+`q` is short for query, `d` is short for database.
+`wi` is the weight used at leaf node `i`.
+`N` is the total amount of images in the database, `Ni` is the amount of images present in leaf node `i`.
+`qi` and `di` are elements of the vectors `q` and `d` respectively, at the index `i`.
+`ni` and `mi` are the number of vectors in the leaf node `i` of the query and database image respectively.
+The normalisation and distance between `d` and `q` are L1-norms, these have been found to be more accurate than L2-norms.
 
 In this formula, the lower the score the better. 
 How closer the occurance of vectors in every leaf node of the query image matches that of the db image, the lower the score.
@@ -258,9 +258,9 @@ The simplification comes down to:
 Due to this implementation only the leaf nodes where a query descriptor ends needs to be processed and only the images present on that leaf node.
 This avoids processing every image seperatly. 
 Note that only the cluster centers are used for distance calculations. 
-The only information of the descriptors we use is from which image it is, and how many at which leaf node there are descriptors of an image.
-We pre-proces the wi and di values on every leaf node for every image, then only centroids of the tree and that scoring data needs to be stored.
-F.e. my image db is 16GB, all kp and des take up ~150GB but the tree only takes up 3GB.
+The only information of the descriptors we use is from which image it is, how many descriptors every image has and to which leaf node the descriptors are assigned to.
+We pre-proces the `wi` and `di` values on every leaf node for every image, then only centroids of the tree and that scoring data needs to be stored.
+F.e. my image database takes up 16GB of disk space, all kp and des take up ~150GB but the tree only takes up 3GB.
 
 **NOTE:** In this repository we made a little adjustment to that formula: we start with zero and add score instead of substracting it. 
 So the higher the score, the better the candidate is in our implementation.
@@ -269,9 +269,9 @@ So the higher the score, the better the candidate is in our implementation.
 
 The best `N` candidates, aka the images with the highest score are all checked if they are a correct match.
 We already calculated the kp and des of the query image.
-If the kp and des are stored per image, we can get those from our SSD drive (disk might be to slow).
-Then the only thing left to do ist matching the prestored data and aplying geometric verification.
-The amount of inliers of the `N` best candidates are used for the final proposed match.
+If the kp and des are stored per image, we can get those from our SSD drive (a hard disk might be too slow).
+Then the only thing left to do is matching the pre-stored data and aplying geometric verification.
+The amount of inliers of the `N` best candidates is used for the final proposed match.
 
 An image needs to have at least six inliers to be concidered a possible match.
 Then we throw away the candidates with fewer then 20% inliers of the highest amount of inliers.
@@ -279,9 +279,9 @@ A certainty percentage is given to the remaining candidates with the following f
 
     certainty_percentage = min(100, inliers - 5) * inliers / sum_inliers
     
-sum_inliers is the sum of the inliers of the remaining candidates.
+`sum_inliers` is the sum of the inliers of the remaining candidates.
 This results in a percentage between 0 and 100 representing the certainty of every match.
-A binary value of certainty for the best match could be set as followed: 
+A binary value of certainty for the best match is set as followed: 
 
     if sum_inliers < 105 or certainty_percentage < 50:
         UNCERTAIN
@@ -290,14 +290,14 @@ A binary value of certainty for the best match could be set as followed:
 
 ## Further improvement
 
-Adding images to the tree should be perfectly possible without loosing accuracy. This is not implemented yet.
+- Adding images to the tree should be perfectly possible without loosing accuracy. This is not implemented yet.
 
-As previously metioned, using another keypoint extractor (f.e.) MSER could improve performance. 
+- As previously metioned, using another keypoint extractor (f.e.) MSER could improve performance. 
 Training a kp and des extractor and descriptor (f.e. [DELF](https://github.com/facebookresearch/faiss)) should increase performance. 
 This was not possible to implement mainly due to insufficient test data and time constraints.
 Implementing either another keypoint extractor or training an AI for feature extraction is definetly worth a trie.
 
-Using state-of-the-art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree.
+- Using state-of-the-art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree.
 Using the faiss library, I've significantly improved the accuracy of the object detection in https://www.github.com/DaanS8/ScalableRecognitionImproved.
 
 
