@@ -177,7 +177,7 @@ This results in a tree with `k^L` cluster groups at the lowest level, aka leaf n
 Every leaf node is a cluster center with a varying amount descriptors assigned to it.
 
 The image below gives an example for `k = 3; L = 4`, where the k-clustering algorithm is only ran in one of the found cluster groups.
-The Voronoi region is the region around a cluster center where points are closest to that cluster center and not to another cluster center of that level.
+The Voronoi region is the region around a cluster center where points are closest to that cluster center, in the image below the borders of the Voronoi regions are marked by black lines.
 
 ![Example hierarchical k-means tree](img_rm/kmeans_tree.png)
 
