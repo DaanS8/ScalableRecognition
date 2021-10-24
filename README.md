@@ -174,7 +174,7 @@ Run the k-means algorithm on all the descriptors of the db images, this results 
 Run k-means again in every cluster, use all descriptors assigned to that cluster and again k clusters our found.
 Keep repeating this L times, where L is short for levels.
 This results in a tree with `k^L` cluster groups at the lowest level, aka leaf nodes. 
-Every leaf node is the cluster center with a varying amount descriptors assigned to it.
+Every leaf node is a cluster center with a varying amount descriptors assigned to it.
 
 The image below gives an example for `k = 3; L = 4`, where the k-clustering algorithm is only ran in one of the found cluster groups.
 The Voronoi region is the region around a cluster center where points are closest to that cluster center and not to another cluster center of that level.
