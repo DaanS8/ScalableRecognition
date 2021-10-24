@@ -154,7 +154,9 @@ The algorithm is iterative and works as followed:
 3) Update every cluster center by setting it to the true cluster center of the current cluster group
 4) Jump back to 2) until every point is stable
 
-![Example k-means](img_rm/kmeans.gif) (https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/)
+![Example k-means](img_rm/kmeans.gif) 
+
+(https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/)
 
 The most used performance metric is variance aka the sum of squares, representing the compactness of the clustering.
 
