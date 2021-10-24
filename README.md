@@ -154,7 +154,7 @@ The algorithm is iterative and works as followed:
 3) Update every cluster center by setting it to the true cluster center of the current cluster group
 4) Jump back to 2) until every point is stable
 
-![Example k-means](img_rm/kmeans.gif) [[1]](https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/)
+![Example k-means](img_rm/kmeans.gif) (https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/)
 
 The most used performance metric is variance aka the sum of squares, representing the compactness of the clustering.
 
@@ -298,8 +298,5 @@ Implementing either another keypoint extractor or training an AI for feature ext
 Using state-of-the-art data structures, nearest neighbour search can be done more accuratly and efficiently than with a k-means tree.
 Using the faiss library, I've significantly improved the accuracy of the object detection in https://www.github.com/DaanS8/ScalableRecognitionImproved.
 
-## References
-
-[1]: Sheehan, D. (2017, May 09). Clustering with Scikit with GIFs. dashee87.github.io. https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/
 
 
