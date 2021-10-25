@@ -16,6 +16,7 @@ def _build_tree_level_enough_cache(ids, des, k, criteria, attempts):
         print("Error while building level", e)
         return None, None, None
 
+
 def _check_level_ok(res, k, l, level):
     if res is None:
         return False

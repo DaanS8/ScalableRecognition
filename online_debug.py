@@ -9,7 +9,6 @@ import cv2 as cv
 import numpy as np
 import parallelize
 import db_image
-import numpy_indexed as npi
 from collections import OrderedDict
 
 trees = ["sift_all_tree.p"]
@@ -33,7 +32,10 @@ def final_scoring(kp, des, initial_scores):
     results = dict()
     matcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
     for index in initial_scores:
+        # Get kp and des of image from disk
         kp_d, des_d = db_image.DbImage(index).get_kp_des()
+
+        # Matcher
         knn_matches = matcher.knnMatch(des, des_d, 2)  # result == 2 closest matches
 
         # -- Filter matches using the Lowe's ratio test
@@ -43,51 +45,75 @@ def final_scoring(kp, des, initial_scores):
             if m.distance < ratio_thresh * n.distance:
                 good_matches.append(m)
 
+        # If at least 10 keypoints can be tested
         if len(good_matches) > 10:
+            # Get x,y coordinates
             src_pts = np.float32([kp[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp_d[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-            M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 5.0)
+
+            # Search homography
+            _, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 5.0)
+
+            # Count nb of inliers
             final = np.count_nonzero(mask)
+
+            # If at least 6 inliers, good result!
             if final > 5:
                 results[index] = final
+
     return results
 
 
 def main():
+    # Check if there are sub folders
     test_folders = _look_for_sub_test_folders(test_folder)
 
     for tree_path in trees:
-        tree = kmeans_tree.KMeansTree(tree_path)
+        tree = kmeans_tree.KMeansTree(tree_path)  # load tree
 
+        # keep track of time performance
         start_total = time.time()
         t0, t1, t2, t3, t4, t5 = 0, 0, 0, 0, 0, 0
+        # t0 = Preprocessing images
+        # t1 = Calculating kp & des of test images
+        # t2 = Initial Scoring
+        # t3 = Accuracy calculations for debug information
+        # t4 = Final Scoring
+        # t5 = Certainty calculations
+
         processed_images = 0
         for folder in test_folders:
             start = time.time()
+
+            # Get all paths in the current folder and grayscale all these images
             paths = [folder + file_name for file_name in os.listdir(folder)]
             parallelize.parallelize_resize(paths)
             t0 += time.time() - start
             processed_images += len(paths)
 
-            result = dict()
-            percentage_correct = dict()
-            percentage_incorrect = dict()
-            certain = [0, 0]
-            uncertain = [0, 0]
-            no_result = [0, 0]
+            # Keep track of results
+            result = dict()  # keep track of at which index the correct results is after processing the index search results
+            percentage_correct = dict()  # keep track of the certainty percentages of every test image that was correct
+            percentage_incorrect = dict()  # keep track of the certainty percentages of every test image that was incorrect
+            certain = [0, 0]  # [correct, incorrect] of all test images who got the boolean value certain=True
+            uncertain = [0, 0]  # [correct, incorrect] of all test images who got the boolean value certain=False
+            no_result = [0, 0]  # [No db match, Has db match] of all test images with no result after geometrical verification
 
             print("Start processing folder '{}' with tree '{}'".format(folder, tree_path))
             for path in paths:
                 try:
+                    # Read image and calculate kp and des
                     start = time.time()
                     img = cv.imread(path, cv.IMREAD_GRAYSCALE)
                     kp, des = utils.sift.detectAndCompute(img, None)
                     t1 += time.time() - start
 
+                    # Initial scoring
                     start = time.time()
                     indices, scores = tree.initial_scoring(des)
                     t2 += time.time() - start
 
+                    # Accuracy calculations
                     start = time.time()
                     if "Junk" not in path:
                         correct_id = int(path[path.rfind("/") + 1:-4])
@@ -105,6 +131,7 @@ def main():
                     result[correct_index] = result.get(correct_index, 0) + 1
                     t3 += time.time() - start
 
+                    # Only use the best NB_OF_IMAGES_CONSIDERED in final scoring
                     start = time.time()
                     considered = np.argpartition(scores, -NB_OF_IMAGES_CONSIDERED)[-NB_OF_IMAGES_CONSIDERED:]
                     final_result = final_scoring(kp, des, indices[considered])
@@ -112,10 +139,12 @@ def main():
 
                     start = time.time()
                     if len(final_result) > 0:
+                        # Calculate certainty percentages
                         minimal_value = max(final_result.values()) * 0.2
                         good = {k: v for k, v in final_result.items() if v >= minimal_value}
                         sum_values = sum(good.values())
 
+                        # Keep track of accuracies
                         first = True
                         for key, value in sorted(good.items(), key=lambda item: item[1], reverse=True):
                             certainty_percentage = min(100, value - 5) * value / sum_values
@@ -146,6 +175,7 @@ def main():
                 except Exception as e:
                     print("Error at {} with error: {}".format(path, e))
 
+            # Print accuracy results per folder
             print("position index", OrderedDict(sorted(result.items())))
             print("Certainty percentage correct", OrderedDict(sorted(percentage_correct.items())))
             print("Certainty percentage incorrect", OrderedDict(sorted(percentage_incorrect.items())))
@@ -153,6 +183,7 @@ def main():
             print("Uncertain", uncertain)
             print("No Result", no_result)
 
+        # Print timing results per tree
         print("Average time per image: {:.2f}s.".format((time.time() - start_total)/processed_images))
 
         sum_times = (t0 + t1 + t2 + t3 + t4 + t5)/100

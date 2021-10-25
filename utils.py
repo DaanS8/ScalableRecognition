@@ -7,6 +7,7 @@ sift = cv.SIFT_create()
 bf = cv.BFMatcher(cv.NORM_L2)
 
 
+# general helpers
 def get_pickled(path):
     try:
         with open(path, 'rb') as handle:
