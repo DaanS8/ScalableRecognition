@@ -1,6 +1,6 @@
 import os
 import time
-
+import online
 import resize
 import utils
 import kmeans_tree
@@ -26,42 +26,6 @@ def _look_for_sub_test_folders(test_folder):
     except Exception:  # only a main folder
         test_folders = [test_folder]
     return test_folders
-
-
-def final_scoring(kp, des, initial_scores):
-    results = dict()
-    matcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
-    for index in initial_scores:
-        # Get kp and des of image from disk
-        kp_d, des_d = db_image.DbImage(index).get_kp_des()
-
-        # Matcher
-        knn_matches = matcher.knnMatch(des, des_d, 2)  # result == 2 closest matches
-
-        # -- Filter matches using the Lowe's ratio test
-        ratio_thresh = 0.7
-        good_matches = []
-        for m, n in knn_matches:
-            if m.distance < ratio_thresh * n.distance:
-                good_matches.append(m)
-
-        # If at least 10 keypoints can be tested
-        if len(good_matches) > 10:
-            # Get x,y coordinates
-            src_pts = np.float32([kp[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-            dst_pts = np.float32([kp_d[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-
-            # Search homography
-            _, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 5.0)
-
-            # Count nb of inliers
-            final = np.count_nonzero(mask)
-
-            # If at least 6 inliers, good result!
-            if final > 5:
-                results[index] = final
-
-    return results
 
 
 def main():
@@ -134,7 +98,7 @@ def main():
                     # Only use the best NB_OF_IMAGES_CONSIDERED in final scoring
                     start = time.time()
                     considered = np.argpartition(scores, -NB_OF_IMAGES_CONSIDERED)[-NB_OF_IMAGES_CONSIDERED:]
-                    final_result = final_scoring(kp, des, indices[considered])
+                    final_result = online.final_scoring(kp, des, indices[considered])
                     t4 += time.time() - start
 
                     start = time.time()
